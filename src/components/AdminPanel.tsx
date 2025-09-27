@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Edit, Save, Cancel, Upload, Download, RotateCcw, Eye, EyeOff, Settings } from 'lucide-react';
+import { X, Plus, Trash2, CreditCard as Edit, Save, Ambulance as Cancel, Upload, Download, RotateCcw, Eye, EyeOff, Settings } from 'lucide-react';
 import { adminAuth, AdminUser } from '../lib/adminAuth';
 import { adminDB, Product, BrandSettings } from '../lib/adminDatabase';
 import { toast } from 'sonner';
