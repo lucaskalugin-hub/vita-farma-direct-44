@@ -302,24 +302,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     const newProducts = { ...customProducts, [productId]: newProduct };
     onCustomProductsChange(newProducts);
     localStorage.setItem('customProducts', JSON.stringify(newProducts));
-    
+
     // Trigger a storage event to update other tabs/components
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'customProducts',
       newValue: JSON.stringify(newProducts)
     }));
-    
-    // Force a page reload to update the main site immediately
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-    
+
     toast({
       title: "Sucesso",
       description: editingProduct === 'new' ? "Produto criado!" : "Produto atualizado!",
     });
 
+    // Reset form and editing state
     resetProductForm();
+    setEditingProduct(null);
+
+    // Forçar reload imediato para garantir atualização na mesma aba
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
   };
 
   const resetProductForm = () => {
