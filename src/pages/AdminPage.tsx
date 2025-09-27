@@ -3,6 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import AdminPanel from '../components/AdminPanel';
 import AdminLogin from '../components/AdminLogin';
+import { adminAuth } from '../lib/adminAuth';
+import { adminDB } from '../lib/adminDatabase';
+import { toast } from 'sonner';
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -10,59 +13,48 @@ const AdminPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [customProducts, setCustomProducts] = useState({});
   const [brandColors, setBrandColors] = useState({
-    brandA: '#064E4F',
-    brandB: '#68E384'
+    brandA: '#0B6A6D',
+    brandB: '#22C55E'
   });
 
   // Check authentication and load data
   useEffect(() => {
-    const checkAuth = () => {
-      const adminKey = localStorage.getItem('adminKey');
-      const sessionExpiry = localStorage.getItem('adminSessionExpiry');
-      
-      if (adminKey === 'vitafit-admin' && sessionExpiry) {
-        const expiryTime = parseInt(sessionExpiry, 10);
-        const now = Date.now();
-        
-        if (now < expiryTime) {
-          setIsAuthenticated(true);
-        } else {
-          // Session expired, clear storage
-          localStorage.removeItem('adminKey');
-          localStorage.removeItem('adminSessionExpiry');
-          setIsAuthenticated(false);
-        }
-      } else {
-        setIsAuthenticated(false);
-      }
-      
+    const checkAuth = async () => {
+      const isAuth = adminAuth.checkSession();
+      setIsAuthenticated(isAuth);
       setIsLoading(false);
+
+      if (isAuth) {
+        await loadData();
+      }
     };
 
     checkAuth();
+  }, []);
 
-    // Load custom data from localStorage if authenticated
-    if (isAuthenticated) {
-      const savedProducts = localStorage.getItem('customProducts');
-      if (savedProducts) {
-        try {
-          setCustomProducts(JSON.parse(savedProducts));
-        } catch (e) {
-          console.error('Error loading custom products:', e);
-        }
+  const loadData = async () => {
+    try {
+      // Load brand settings from database
+      const brandSettings = await adminDB.getBrandSettings();
+      if (brandSettings) {
+        setBrandColors({
+          brandA: brandSettings.brand_a_color,
+          brandB: brandSettings.brand_b_color
+        });
       }
 
-      const savedColors = localStorage.getItem('brandColors');
-      if (savedColors) {
-        try {
-          setBrandColors(JSON.parse(savedColors));
-        } catch (e) {
-          console.error('Error loading brand colors:', e);
-        }
-      }
+      // Load products from database
+      const products = await adminDB.getProducts();
+      const productsObj = {};
+      products.forEach(product => {
+        productsObj[product.id] = product;
+      });
+      setCustomProducts(productsObj);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Erro ao carregar dados');
     }
-  }, [isAuthenticated]);
-
+  };
   // Apply brand colors to CSS variables
   useEffect(() => {
     const root = document.documentElement;
@@ -96,18 +88,28 @@ const AdminPage = () => {
     root.style.setProperty('--brandB', hexToHsl(brandColors.brandB));
   }, [brandColors]);
 
-  const handleCustomProductsChange = (products) => {
+  const handleCustomProductsChange = async (products) => {
     setCustomProducts(products);
-    localStorage.setItem('customProducts', JSON.stringify(products));
+    // Products are now managed through the database
   };
 
-  const handleBrandColorsChange = (colors) => {
+  const handleBrandColorsChange = async (colors) => {
     setBrandColors(colors);
-    localStorage.setItem('brandColors', JSON.stringify(colors));
+    
+    try {
+      await adminDB.updateBrandSettings({
+        brand_a_color: colors.brandA,
+        brand_b_color: colors.brandB
+      });
+    } catch (error) {
+      console.error('Error updating brand colors:', error);
+      toast.error('Erro ao atualizar cores da marca');
+    }
   };
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
+    loadData();
   };
 
   // Loading state

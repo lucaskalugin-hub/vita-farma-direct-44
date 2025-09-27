@@ -6,6 +6,9 @@ import venvanse50mg from '../assets/venvanse-50mg.png';
 import ritalina10mg from '../assets/ritalina-10mg.png';
 import cytotec200mcg from '../assets/cytotec-200mcg.png';
 import { WppLink } from '../components/WppLink';
+import { adminAuth } from '../lib/adminAuth';
+import { adminDB } from '../lib/adminDatabase';
+import { toast } from 'sonner';
 
 // Vial with leaf SVG icon component
 const VialLeafIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
@@ -198,32 +201,33 @@ const VitaFitFarma = () => {
 
   // Load admin state and custom data from localStorage
   useEffect(() => {
-    const adminKey = localStorage.getItem('adminKey');
-    if (adminKey === 'vitafit-admin') {
+    const isAuth = adminAuth.checkSession();
+    if (isAuth) {
       setIsAdmin(true);
     }
     
-    const loadData = () => {
-      // Load custom products
-      const savedProducts = localStorage.getItem('customProducts');
-      if (savedProducts) {
-        try {
-          setCustomProducts(JSON.parse(savedProducts));
-        } catch (e) {
-          console.error('Error loading custom products:', e);
-        }
-      }
-
-      // Load brand colors
-      const savedColors = localStorage.getItem('brandColors');
-      if (savedColors) {
-        try {
-          const colors = JSON.parse(savedColors);
+    const loadData = async () => {
+      try {
+        // Load brand settings from database
+        const brandSettings = await adminDB.getBrandSettings();
+        if (brandSettings) {
+          const colors = {
+            brandA: brandSettings.brand_a_color,
+            brandB: brandSettings.brand_b_color
+          };
           setBrandColors(colors);
           updateCSSVariables(colors);
-        } catch (e) {
-          console.error('Error loading brand colors:', e);
         }
+
+        // Load products from database
+        const products = await adminDB.getProducts();
+        const productsObj = {};
+        products.forEach(product => {
+          productsObj[product.id] = product;
+        });
+        setCustomProducts(productsObj);
+      } catch (error) {
+        console.error('Error loading data:', error);
       }
     };
 
@@ -249,9 +253,9 @@ const VitaFitFarma = () => {
       setAdminKeySequence(newSequence);
       
       if (newSequence === 'vfadmin') {
-        localStorage.setItem('adminKey', 'vitafit-admin');
         setIsAdmin(true);
         setAdminKeySequence('');
+        toast.success('Modo admin ativado');
         return;
       }
       
@@ -272,20 +276,20 @@ const VitaFitFarma = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('admin') === '1') {
-      localStorage.setItem('adminKey', 'vitafit-admin');
       setIsAdmin(true);
+      toast.success('Modo admin ativado via URL');
     }
   }, []);
 
   // Get merged products (default + custom), filtering out inactive ones
   const getProducts = useCallback(() => {
-    const inactiveProducts = JSON.parse(localStorage.getItem('inactiveProducts') || '[]');
     const allProducts = { ...DEFAULT_PRODUCTS, ...customProducts };
     
-    // Filter out inactive products
+    // Filter out inactive products from database
     const activeProducts = {} as typeof DEFAULT_PRODUCTS;
     Object.keys(allProducts).forEach(key => {
-      if (!inactiveProducts.includes(key)) {
+      const product = allProducts[key];
+      if (product.is_active !== false) {
         activeProducts[key] = allProducts[key];
       }
     });

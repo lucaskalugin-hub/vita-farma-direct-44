@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import { z } from 'zod';
-
-// Login credentials validation schema
-const loginSchema = z.object({
-  username: z.string().trim().min(1, 'Usuário é obrigatório'),
-  password: z.string().trim().min(1, 'Senha é obrigatória')
-});
+import { adminAuth } from '../lib/adminAuth';
+import { toast } from 'sonner';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -21,29 +16,30 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    if (!formData.username.trim() || !formData.password.trim()) {
+      setError('Usuário e senha são obrigatórios');
+      return;
+    }
+    
     setIsLoading(true);
+    setError('');
 
     try {
-      // Validate input
-      const validatedData = loginSchema.parse(formData);
-      
-      // Check credentials
-      if (validatedData.username === 'Vitafitfarma' && validatedData.password === '@Jcm151073') {
-        // Set 24-hour session
-        const expirationTime = Date.now() + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
-        localStorage.setItem('adminKey', 'vitafit-admin');
-        localStorage.setItem('adminSessionExpiry', expirationTime.toString());
+      const result = await adminAuth.login({
+        username: formData.username.trim(),
+        password: formData.password.trim()
+      });
+
+      if (result.success) {
+        toast.success('Login realizado com sucesso');
         onLoginSuccess();
       } else {
-        setError('Credenciais inválidas.');
+        setError(result.error || 'Credenciais inválidas');
       }
-    } catch (validationError) {
-      if (validationError instanceof z.ZodError) {
-        setError(validationError.errors[0]?.message || 'Dados inválidos');
-      } else {
-        setError('Erro no login');
-      }
+    } catch (error) {
+      console.error('Erro no login:', error);
+      setError('Erro interno do servidor');
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +65,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
             loading="eager"
           />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            VitaFit — Área Administrativa
+            VitaFit Farma — Admin
           </h1>
         </div>
 
