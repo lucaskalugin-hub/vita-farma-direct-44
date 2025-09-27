@@ -475,7 +475,7 @@ const VitaFitFarma = () => {
           <img
             src={heroBackground}
             alt="VitaFit Farma - Medicamentos diversos"
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover object-center"
             loading="eager"
           />
           {/* Gradient overlay */}
