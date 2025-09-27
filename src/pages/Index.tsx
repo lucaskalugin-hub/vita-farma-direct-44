@@ -396,12 +396,7 @@ const VitaFitFarma = () => {
         <div className="container mx-auto px-4 py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <button 
-              onClick={() => scrollToSection('inicio')}
-              className={`focus-ring rounded-lg bg-white/20 backdrop-blur-sm p-3 shadow-lg border border-white/30 logo-shrink ${logoCompact ? 'logo-compact' : ''} relative z-20`}
-              aria-label="Voltar ao início"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
-            >
+            <div className={`logo-shrink ${logoCompact ? 'logo-compact' : ''} relative z-20`}>
               <div className="flex items-center gap-2">
                 <VialLeafIcon size={logoCompact ? 28 : 32} className="logo-mark" />
                 <div className="logo-full">
@@ -416,7 +411,7 @@ const VitaFitFarma = () => {
                   <span className="text-primary font-bold text-lg">VitaFit</span>
                 </div>
               </div>
-            </button>
+            </div>
 
             {/* Navigation */}
             <nav className="hidden md:flex items-center space-x-6">
