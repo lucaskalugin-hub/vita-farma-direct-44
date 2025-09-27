@@ -185,6 +185,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const saveInactiveProducts = (inactive: string[]) => {
     setInactiveProducts(inactive);
     localStorage.setItem('inactiveProducts', JSON.stringify(inactive));
+    
+    // Trigger a storage event to update other tabs/components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'inactiveProducts',
+      newValue: JSON.stringify(inactive)
+    }));
   };
 
   // Toggle product active/inactive status
@@ -291,6 +297,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     const newProducts = { ...customProducts, [productId]: newProduct };
     onCustomProductsChange(newProducts);
     localStorage.setItem('customProducts', JSON.stringify(newProducts));
+    
+    // Trigger a storage event to update other tabs/components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'customProducts',
+      newValue: JSON.stringify(newProducts)
+    }));
     
     toast({
       title: "Sucesso",
@@ -744,17 +756,58 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1">Preço (R$)</label>
-                          <Input
-                            type="number"
-                            value={dose.price}
-                            onChange={(e) => {
-                              const newDoses = [...productForm.doses];
-                              newDoses[index].price = Number(e.target.value);
-                              setProductForm(prev => ({ ...prev, doses: newDoses }));
-                            }}
-                            placeholder="0"
-                          />
+                          <label className="block text-sm font-medium mb-1">Preço</label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`consultation-${index}`}
+                                name={`price-type-${index}`}
+                                checked={dose.price === 0}
+                                onChange={() => {
+                                  const newDoses = [...productForm.doses];
+                                  newDoses[index].price = 0;
+                                  setProductForm(prev => ({ ...prev, doses: newDoses }));
+                                }}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor={`consultation-${index}`} className="text-sm">
+                                Sob consulta
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`price-${index}`}
+                                name={`price-type-${index}`}
+                                checked={dose.price > 0}
+                                onChange={() => {
+                                  const newDoses = [...productForm.doses];
+                                  if (newDoses[index].price === 0) {
+                                    newDoses[index].price = 100;
+                                  }
+                                  setProductForm(prev => ({ ...prev, doses: newDoses }));
+                                }}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor={`price-${index}`} className="text-sm">
+                                Valor específico (R$)
+                              </label>
+                            </div>
+                            {dose.price > 0 && (
+                              <Input
+                                type="number"
+                                value={dose.price}
+                                onChange={(e) => {
+                                  const newDoses = [...productForm.doses];
+                                  newDoses[index].price = Number(e.target.value);
+                                  setProductForm(prev => ({ ...prev, doses: newDoses }));
+                                }}
+                                placeholder="Digite o preço"
+                                min="1"
+                              />
+                            )}
+                          </div>
                         </div>
                       </div>
 

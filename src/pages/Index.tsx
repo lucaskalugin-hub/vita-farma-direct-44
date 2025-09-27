@@ -163,34 +163,6 @@ const VitaFitFarma = () => {
     brandB: '#22C55E'
   });
 
-  // Load admin state and custom data from localStorage
-  useEffect(() => {
-    const adminKey = localStorage.getItem('adminKey');
-    if (adminKey === 'vitafit-admin') {
-      setIsAdmin(true);
-    }
-    
-    const savedProducts = localStorage.getItem('products');
-    if (savedProducts) {
-      try {
-        setCustomProducts(JSON.parse(savedProducts));
-      } catch (e) {
-        console.error('Error loading custom products:', e);
-      }
-    }
-
-    const savedColors = localStorage.getItem('brandColors');
-    if (savedColors) {
-      try {
-        const colors = JSON.parse(savedColors);
-        setBrandColors(colors);
-        updateCSSVariables(colors);
-      } catch (e) {
-        console.error('Error loading brand colors:', e);
-      }
-    }
-  }, []);
-
   // Update CSS variables
   const updateCSSVariables = useCallback((colors) => {
     const root = document.documentElement;
@@ -223,6 +195,50 @@ const VitaFitFarma = () => {
     root.style.setProperty('--brandA', hexToHsl(colors.brandA));
     root.style.setProperty('--brandB', hexToHsl(colors.brandB));
   }, []);
+
+  // Load admin state and custom data from localStorage
+  useEffect(() => {
+    const adminKey = localStorage.getItem('adminKey');
+    if (adminKey === 'vitafit-admin') {
+      setIsAdmin(true);
+    }
+    
+    const loadData = () => {
+      // Load custom products
+      const savedProducts = localStorage.getItem('customProducts');
+      if (savedProducts) {
+        try {
+          setCustomProducts(JSON.parse(savedProducts));
+        } catch (e) {
+          console.error('Error loading custom products:', e);
+        }
+      }
+
+      // Load brand colors
+      const savedColors = localStorage.getItem('brandColors');
+      if (savedColors) {
+        try {
+          const colors = JSON.parse(savedColors);
+          setBrandColors(colors);
+          updateCSSVariables(colors);
+        } catch (e) {
+          console.error('Error loading brand colors:', e);
+        }
+      }
+    };
+
+    loadData();
+
+    // Listen for storage changes to update in real-time
+    const handleStorageChange = (e) => {
+      if (e.key === 'customProducts' || e.key === 'brandColors' || e.key === 'inactiveProducts') {
+        loadData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [updateCSSVariables]);
 
   // Admin key sequence detection
   useEffect(() => {
