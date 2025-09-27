@@ -197,27 +197,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const toggleProductStatus = (productId: string) => {
     const isInactive = inactiveProducts.includes(productId);
     let newInactiveProducts;
-    
     if (isInactive) {
-      // Activate product (remove from inactive list)
+      // Ativar produto
       newInactiveProducts = inactiveProducts.filter(id => id !== productId);
-      toast({
-        title: "Produto ativado",
-        description: "O produto agora aparecerá no catálogo",
-      });
     } else {
-      // Deactivate product (add to inactive list)
+      // Inativar produto
       newInactiveProducts = [...inactiveProducts, productId];
-      toast({
-        title: "Produto inativado", 
-        description: "O produto não aparecerá mais no catálogo",
-        variant: "destructive"
-      });
     }
-    
     saveInactiveProducts(newInactiveProducts);
-    
-    // Force a page reload to update the main site immediately
+    toast({
+      title: "Salvo com sucesso",
+      description: isInactive ? "Produto ativado!" : "Produto inativado!",
+    });
     setTimeout(() => {
       window.location.reload();
     }, 500);
@@ -251,11 +242,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const imageData = e.target?.result as string;
-      
-      if (type === 'product' && doseIndex !== undefined) {
-        const newDoses = [...productForm.doses];
-        newDoses[doseIndex].image = imageData;
-        setProductForm(prev => ({ ...prev, doses: newDoses }));
+      if (type === 'product' && typeof doseIndex === 'number') {
+        setProductForm(prev => {
+          const newDoses = prev.doses.map((d, i) => i === doseIndex ? { ...d, image: imageData } : d);
+          return { ...prev, doses: newDoses };
+        });
       } else if (type === 'banner') {
         setBannerForm(prev => ({ ...prev, image: imageData }));
       }
@@ -266,7 +257,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const addDose = () => {
     setProductForm(prev => ({
       ...prev,
-      doses: [...prev.doses, { value: '', label: '', price: 0, image: '' }]
+      doses: [
+        ...Array.isArray(prev.doses) ? prev.doses : [],
+        { value: '', label: '', price: 0, image: '' }
+      ]
     }));
   };
 
@@ -289,32 +283,34 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       return;
     }
 
-    const productId = editingProduct === 'new' 
+    const productId = editingProduct === 'new'
       ? generateProductId(productForm.name)
       : editingProduct!;
 
     const newProduct = {
       id: productId,
       ...productForm,
-      description: productForm.description.filter(d => d.trim())
+      description: productForm.description.map(d => d.trim()).filter(Boolean)
     };
 
-    const newProducts = { ...customProducts, [productId]: newProduct };
+    // Atualiza ou adiciona produto customizado
+    const newProducts = { ...customProducts };
+    newProducts[productId] = newProduct;
     onCustomProductsChange(newProducts);
     localStorage.setItem('customProducts', JSON.stringify(newProducts));
 
-    // Trigger a storage event to update other tabs/components
+    // Trigger a storage event para atualizar outras abas/componentes
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'customProducts',
       newValue: JSON.stringify(newProducts)
     }));
 
     toast({
-      title: "Sucesso",
-      description: editingProduct === 'new' ? "Produto criado!" : "Produto atualizado!",
+      title: "Salvo com sucesso",
+      description: editingProduct === 'new' ? "Produto cadastrado!" : "Produto atualizado!",
     });
 
-    // Reset form and editing state
+    // Resetar formulário e estado de edição
     resetProductForm();
     setEditingProduct(null);
 
@@ -368,10 +364,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       name: product.name || '',
       subtitle: product.subtitle || '',
       category: product.category || 'TG',
-      requiresPrescription: product.requiresPrescription || false,
-      description: product.description || ['', '', ''],
-      doses: product.doses || [{ value: '', label: '', price: 0, image: '' }],
-      formaOptions: product.formaOptions || []
+      requiresPrescription: !!product.requiresPrescription,
+      description: Array.isArray(product.description) ? [...product.description, '', '', ''].slice(0, 3) : ['', '', ''],
+      doses: Array.isArray(product.doses) && product.doses.length > 0
+        ? product.doses.map((d: any) => ({ ...d }))
+        : [{ value: '', label: '', price: 0, image: '' }],
+      formaOptions: Array.isArray(product.formaOptions) ? [...product.formaOptions] : []
     });
     setActiveTab('new-product');
   };
