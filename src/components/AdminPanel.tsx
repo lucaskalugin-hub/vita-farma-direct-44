@@ -1,0 +1,967 @@
+import React, { useState } from 'react';
+import { X, Settings, Upload, Plus, Trash2, ImageIcon, Eye, Edit3, EyeOff, Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+
+// Default products from the site
+const DEFAULT_PRODUCTS = {
+  tg: {
+    id: 'tg',
+    category: 'TG',
+    name: 'TG — Tirzepatida',
+    subtitle: 'Mais econômico',
+    description: [
+      '💰 Preços competitivos direto do Paraguai',
+      '🚚 Entrega regional (PR, SC, RS, Grande SP)',
+      '📱 Atendimento rápido via WhatsApp'
+    ],
+    doses: [
+      { value: '5mg', label: '5 mg', price: 1442, image: 'https://i.ibb.co/tTDjz73v/image.png' },
+      { value: '10mg', label: '10 mg', price: 1946, image: 'https://http2.mlstatic.com/D_NQ_NP_987475-MLB86452352029_062025-O.webp' },
+      { value: '10mg-canetas', label: '10 mg (canetas)', price: 2618, image: 'https://http2.mlstatic.com/D_NQ_NP_987475-MLB86452352029_062025-O.webp', unavailable: true },
+      { value: '12.5mg', label: '12,5 mg', price: 2114, image: 'https://atacadopods.com/wp-content/uploads/2025/09/T.G-TIRZEPATIDE-125-MG-05ML.webp' },
+      { value: '15mg', label: '15 mg', price: 2618, image: 'https://http2.mlstatic.com/D_NQ_NP_614492-MLB87856316390_072025-O.webp' }
+    ],
+    forma: '4 ampolas',
+    requiresPrescription: false
+  },
+  lipoless: {
+    id: 'lipoless',
+    category: 'Lipoless',
+    name: 'Lipoless — Tirzepatida',
+    subtitle: 'Premium',
+    description: [
+      '⭐ Qualidade premium e confiabilidade',
+      '💉 Opções em ampolas e canetas',
+      '📱 Atendimento especializado via WhatsApp'
+    ],
+    doses: [
+      { value: '5mg', label: '5 mg', price: 1582, image: 'https://http2.mlstatic.com/D_NQ_NP_814025-MLB87238774933_072025-O.webp' },
+      { value: '7.5mg', label: '7,5 mg', price: 1890, image: 'https://http2.mlstatic.com/D_NQ_NP_612104-MLB86230067185_062025-O.webp' },
+      { value: '10mg', label: '10 mg', price: 2086, image: 'https://http2.mlstatic.com/D_NQ_NP_869082-MLB84324990331_052025-O.webp' },
+      { value: '12.5mg', label: '12,5 mg', price: 2254, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8vG8mJ-iO1hCZAmZXMnXcA5IrVovYoAlZ3Q&s' },
+      { value: '15mg', label: '15 mg', price: 2758, image: 'https://http2.mlstatic.com/D_NQ_NP_783579-MLB87009976071_062025-O.webp' }
+    ],
+    formaOptions: [
+      { value: 'ampola', label: '4 ampolas + seringa', priceAdd: 0 },
+      { value: 'caneta', label: 'Caneta (+ R$ 400)', priceAdd: 400 }
+    ],
+    requiresPrescription: false
+  },
+  venvanse: {
+    id: 'venvanse',
+    category: 'Outros',
+    name: 'Venvanse — lisdexanfetamina',
+    subtitle: 'Sob prescrição',
+    description: [
+      '📋 Venda somente com receita',
+      '📱 Atendimento via WhatsApp',
+      '📦 Envio sob disponibilidade'
+    ],
+    doses: [
+      { value: '30mg', label: '30 mg', price: 0, image: '/src/assets/venvanse-50mg.png' },
+      { value: '50mg', label: '50 mg', price: 0, image: '/src/assets/venvanse-50mg.png' },
+      { value: '70mg', label: '70 mg', price: 0, image: '/src/assets/venvanse-50mg.png' }
+    ],
+    requiresPrescription: true
+  },
+  ritalina: {
+    id: 'ritalina',
+    category: 'Outros',
+    name: 'Ritalina — metilfenidato',
+    subtitle: 'Sob prescrição',
+    description: [
+      '📋 Venda somente com receita',
+      '📱 Atendimento via WhatsApp',
+      '📦 Envio sob disponibilidade'
+    ],
+    doses: [
+      { value: '10mg', label: '10 mg', price: 0, image: '/src/assets/ritalina-10mg.png' },
+      { value: '20mg', label: '20 mg', price: 0, image: '/src/assets/ritalina-10mg.png' }
+    ],
+    requiresPrescription: true
+  },
+  cytotec: {
+    id: 'cytotec',
+    category: 'Outros',
+    name: 'Cytotec — misoprostol',
+    subtitle: 'Sob prescrição',
+    description: [
+      '📋 Venda somente com receita',
+      '📱 Atendimento via WhatsApp',
+      '📦 Envio sob disponibilidade'
+    ],
+    doses: [
+      { value: '200mcg', label: '200 mcg', price: 0, image: '/src/assets/cytotec-200mcg.png' }
+    ],
+    requiresPrescription: true
+  }
+};
+
+interface AdminPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  brandColors: { brandA: string; brandB: string };
+  onBrandColorsChange: (colors: { brandA: string; brandB: string }) => void;
+  customProducts: any;
+  onCustomProductsChange: (products: any) => void;
+}
+
+interface ProductFormData {
+  name: string;
+  subtitle: string;
+  category: 'TG' | 'Lipoless' | 'Outros';
+  requiresPrescription: boolean;
+  description: string[];
+  doses: Array<{
+    value: string;
+    label: string;
+    price: number;
+    image: string;
+  }>;
+  formaOptions?: Array<{
+    value: string;
+    label: string;
+    priceAdd: number;
+  }>;
+}
+
+interface BannerData {
+  id: string;
+  name: string;
+  image: string;
+  active: boolean;
+}
+
+const AdminPanel: React.FC<AdminPanelProps> = ({
+  isOpen,
+  onClose,
+  brandColors,
+  onBrandColorsChange,
+  customProducts,
+  onCustomProductsChange
+}) => {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('products');
+  const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  const [productForm, setProductForm] = useState<ProductFormData>({
+    name: '',
+    subtitle: '',
+    category: 'TG',
+    requiresPrescription: false,
+    description: ['', '', ''],
+    doses: [{ value: '', label: '', price: 0, image: '' }],
+    formaOptions: []
+  });
+  
+  // Banner management states
+  const [banners, setBanners] = useState<BannerData[]>(() => {
+    const saved = localStorage.getItem('siteBanners');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [editingBanner, setEditingBanner] = useState<string | null>(null);
+  const [bannerForm, setBannerForm] = useState({
+    name: '',
+    image: '',
+    active: true
+  });
+
+  // Product visibility states
+  const [inactiveProducts, setInactiveProducts] = useState<string[]>(() => {
+    const saved = localStorage.getItem('inactiveProducts');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save inactive products to localStorage
+  const saveInactiveProducts = (inactive: string[]) => {
+    setInactiveProducts(inactive);
+    localStorage.setItem('inactiveProducts', JSON.stringify(inactive));
+  };
+
+  // Toggle product active/inactive status
+  const toggleProductStatus = (productId: string) => {
+    const isInactive = inactiveProducts.includes(productId);
+    let newInactiveProducts;
+    
+    if (isInactive) {
+      // Activate product (remove from inactive list)
+      newInactiveProducts = inactiveProducts.filter(id => id !== productId);
+      toast({
+        title: "Produto ativado",
+        description: "O produto agora aparecerá no catálogo",
+      });
+    } else {
+      // Deactivate product (add to inactive list)
+      newInactiveProducts = [...inactiveProducts, productId];
+      toast({
+        title: "Produto inativado", 
+        description: "O produto não aparecerá mais no catálogo",
+        variant: "destructive"
+      });
+    }
+    
+    saveInactiveProducts(newInactiveProducts);
+  };
+
+  // Get all products (default + custom)
+  const getAllProducts = () => {
+    return { ...DEFAULT_PRODUCTS, ...customProducts };
+  };
+
+  // Product management functions
+  const generateProductId = (name: string): string => {
+    return name.toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 15) + '_' + Date.now().toString(36);
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'product' | 'banner' = 'product', doseIndex?: number) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "Imagem deve ter no máximo 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageData = e.target?.result as string;
+      
+      if (type === 'product' && doseIndex !== undefined) {
+        const newDoses = [...productForm.doses];
+        newDoses[doseIndex].image = imageData;
+        setProductForm(prev => ({ ...prev, doses: newDoses }));
+      } else if (type === 'banner') {
+        setBannerForm(prev => ({ ...prev, image: imageData }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const addDose = () => {
+    setProductForm(prev => ({
+      ...prev,
+      doses: [...prev.doses, { value: '', label: '', price: 0, image: '' }]
+    }));
+  };
+
+  const removeDose = (index: number) => {
+    if (productForm.doses.length > 1) {
+      setProductForm(prev => ({
+        ...prev,
+        doses: prev.doses.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const saveProduct = () => {
+    if (!productForm.name.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome do produto é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const productId = editingProduct === 'new' 
+      ? generateProductId(productForm.name)
+      : editingProduct!;
+
+    const newProduct = {
+      id: productId,
+      ...productForm,
+      description: productForm.description.filter(d => d.trim())
+    };
+
+    const newProducts = { ...customProducts, [productId]: newProduct };
+    onCustomProductsChange(newProducts);
+    localStorage.setItem('customProducts', JSON.stringify(newProducts));
+    
+    toast({
+      title: "Sucesso",
+      description: editingProduct === 'new' ? "Produto criado!" : "Produto atualizado!",
+    });
+
+    resetProductForm();
+  };
+
+  const resetProductForm = () => {
+    setEditingProduct(null);
+    setProductForm({
+      name: '',
+      subtitle: '',
+      category: 'TG',
+      requiresPrescription: false,
+      description: ['', '', ''],
+      doses: [{ value: '', label: '', price: 0, image: '' }],
+      formaOptions: []
+    });
+  };
+
+  const deleteProduct = (productId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    
+    const newProducts = { ...customProducts };
+    delete newProducts[productId];
+    onCustomProductsChange(newProducts);
+    localStorage.setItem('customProducts', JSON.stringify(newProducts));
+    
+    toast({
+      title: "Produto excluído",
+      description: "Produto removido com sucesso",
+    });
+  };
+
+  const editProduct = (product: any) => {
+    setEditingProduct(product.id);
+    setProductForm({
+      name: product.name || '',
+      subtitle: product.subtitle || '',
+      category: product.category || 'TG',
+      requiresPrescription: product.requiresPrescription || false,
+      description: product.description || ['', '', ''],
+      doses: product.doses || [{ value: '', label: '', price: 0, image: '' }],
+      formaOptions: product.formaOptions || []
+    });
+    setActiveTab('new-product');
+  };
+
+  // Banner management functions
+  const saveBanner = () => {
+    if (!bannerForm.name.trim() || !bannerForm.image) {
+      toast({
+        title: "Erro",
+        description: "Nome e imagem são obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const bannerId = editingBanner === 'new' 
+      ? 'banner_' + Date.now().toString(36)
+      : editingBanner!;
+
+    const newBanner = {
+      id: bannerId,
+      ...bannerForm
+    };
+
+    const newBanners = editingBanner === 'new' 
+      ? [...banners, newBanner]
+      : banners.map(b => b.id === bannerId ? newBanner : b);
+
+    setBanners(newBanners);
+    localStorage.setItem('siteBanners', JSON.stringify(newBanners));
+    
+    toast({
+      title: "Sucesso",
+      description: editingBanner === 'new' ? "Banner criado!" : "Banner atualizado!",
+    });
+
+    resetBannerForm();
+  };
+
+  const resetBannerForm = () => {
+    setEditingBanner(null);
+    setBannerForm({
+      name: '',
+      image: '',
+      active: true
+    });
+  };
+
+  const deleteBanner = (bannerId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este banner?')) return;
+    
+    const newBanners = banners.filter(b => b.id !== bannerId);
+    setBanners(newBanners);
+    localStorage.setItem('siteBanners', JSON.stringify(newBanners));
+    
+    toast({
+      title: "Banner excluído",
+      description: "Banner removido com sucesso",
+    });
+  };
+
+  const toggleBannerStatus = (bannerId: string) => {
+    const newBanners = banners.map(b => 
+      b.id === bannerId ? { ...b, active: !b.active } : b
+    );
+    setBanners(newBanners);
+    localStorage.setItem('siteBanners', JSON.stringify(newBanners));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true">
+      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Settings size={24} />
+            Painel Admin
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-1 rounded transition-colors"
+            aria-label="Fechar painel admin"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex px-6 overflow-x-auto">
+            {[
+              { id: 'products', label: 'Produtos Cadastrados', icon: Eye },
+              { id: 'new-product', label: 'Cadastrar Produto', icon: Plus },
+              { id: 'banners', label: 'Gerenciar Banners', icon: ImageIcon }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {/* Products List Tab */}
+          {activeTab === 'products' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Produtos Cadastrados</h3>
+                <Button 
+                  onClick={() => {
+                    resetProductForm();
+                    setEditingProduct('new');
+                    setActiveTab('new-product');
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Novo Produto
+                </Button>
+              </div>
+
+              {Object.keys(getAllProducts()).length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <ImageIcon size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>Nenhum produto disponível.</p>
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Imagem</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Categoria</TableHead>
+                        <TableHead>Preço Base</TableHead>
+                        <TableHead>Receita</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.values(getAllProducts()).map((product: any) => {
+                        const isInactive = inactiveProducts.includes(product.id);
+                        const isDefault = DEFAULT_PRODUCTS.hasOwnProperty(product.id);
+                        
+                        return (
+                          <TableRow key={product.id} className={isInactive ? 'opacity-50' : ''}>
+                            <TableCell>
+                              {product.doses?.[0]?.image ? (
+                                <img 
+                                  src={product.doses[0].image} 
+                                  alt={product.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                  <ImageIcon size={20} className="text-gray-400" />
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{product.name}</div>
+                                <div className="text-sm text-gray-500">{product.subtitle}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {product.category}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              {product.doses?.[0]?.price ? 
+                                `R$ ${product.doses[0].price.toLocaleString('pt-BR')}` : 
+                                'Sob consulta'
+                              }
+                            </TableCell>
+                            <TableCell>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                product.requiresPrescription ? 
+                                  'bg-red-100 text-red-800' : 
+                                  'bg-green-100 text-green-800'
+                              }`}>
+                                {product.requiresPrescription ? 'Sim' : 'Não'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                isInactive ? 
+                                  'bg-gray-100 text-gray-800' : 
+                                  'bg-green-100 text-green-800'
+                              }`}>
+                                {isInactive ? 'Inativo' : 'Ativo'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                isDefault ? 
+                                  'bg-blue-100 text-blue-800' : 
+                                  'bg-purple-100 text-purple-800'
+                              }`}>
+                                {isDefault ? 'Padrão' : 'Custom'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                {/* Edit button */}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => editProduct(product)}
+                                  className="h-8 w-8 p-0"
+                                  title="Editar produto"
+                                >
+                                  <Pencil size={12} />
+                                </Button>
+                                
+                                {/* Toggle active/inactive */}
+                                <Button
+                                  variant={isInactive ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => toggleProductStatus(product.id)}
+                                  className="h-8 w-8 p-0"
+                                  title={isInactive ? "Ativar produto" : "Inativar produto"}
+                                >
+                                  {isInactive ? <Eye size={12} /> : <EyeOff size={12} />}
+                                </Button>
+                                
+                                {/* Delete button */}
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => deleteProduct(product.id)}
+                                  className="h-8 w-8 p-0"
+                                  title="Excluir produto"
+                                >
+                                  <X size={12} />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* New/Edit Product Tab */}
+          {activeTab === 'new-product' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">
+                  {editingProduct === 'new' ? 'Cadastrar Novo Produto' : 'Editar Produto'}
+                </h3>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    resetProductForm();
+                    setActiveTab('products');
+                  }}
+                >
+                  Voltar
+                </Button>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Basic Info */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Nome do Produto *</label>
+                    <Input
+                      value={productForm.name}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Ex: TG - Tirzepatida"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Subtítulo</label>
+                    <Input
+                      value={productForm.subtitle}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, subtitle: e.target.value }))}
+                      placeholder="Ex: Mais econômico"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Categoria</label>
+                    <select
+                      value={productForm.category}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, category: e.target.value as 'TG' | 'Lipoless' | 'Outros' }))}
+                      className="w-full p-2 border border-input rounded-md focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="TG">TG</option>
+                      <option value="Lipoless">Lipoless</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="requiresPrescription"
+                      checked={productForm.requiresPrescription}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, requiresPrescription: e.target.checked }))}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="requiresPrescription" className="text-sm font-medium">
+                      Requer receita médica
+                    </label>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Descrições (máx. 3)</label>
+                    {productForm.description.map((desc, index) => (
+                      <Input
+                        key={index}
+                        value={desc}
+                        onChange={(e) => {
+                          const newDesc = [...productForm.description];
+                          newDesc[index] = e.target.value;
+                          setProductForm(prev => ({ ...prev, description: newDesc }));
+                        }}
+                        placeholder={`Descrição ${index + 1}`}
+                        className="mb-2"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Doses Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Dosagens e Preços</h4>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={addDose}
+                  >
+                    <Plus size={14} className="mr-2" />
+                    Adicionar Dose
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {productForm.doses.map((dose, index) => (
+                    <div key={index} className="p-4 border rounded-lg space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-medium">Dose {index + 1}</h5>
+                        {productForm.doses.length > 1 && (
+                          <Button 
+                            type="button" 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => removeDose(index)}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Valor</label>
+                          <Input
+                            value={dose.value}
+                            onChange={(e) => {
+                              const newDoses = [...productForm.doses];
+                              newDoses[index].value = e.target.value;
+                              setProductForm(prev => ({ ...prev, doses: newDoses }));
+                            }}
+                            placeholder="Ex: 5mg"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Label</label>
+                          <Input
+                            value={dose.label}
+                            onChange={(e) => {
+                              const newDoses = [...productForm.doses];
+                              newDoses[index].label = e.target.value;
+                              setProductForm(prev => ({ ...prev, doses: newDoses }));
+                            }}
+                            placeholder="Ex: 5 mg"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Preço (R$)</label>
+                          <Input
+                            type="number"
+                            value={dose.price}
+                            onChange={(e) => {
+                              const newDoses = [...productForm.doses];
+                              newDoses[index].price = Number(e.target.value);
+                              setProductForm(prev => ({ ...prev, doses: newDoses }));
+                            }}
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Imagem do Produto</label>
+                        <div className="flex items-center gap-4">
+                          {dose.image && (
+                            <img 
+                              src={dose.image} 
+                              alt={`Dose ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded border"
+                            />
+                          )}
+                          <label className="cursor-pointer">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                              <Upload size={16} />
+                              {dose.image ? 'Trocar Imagem' : 'Carregar Imagem'}
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, 'product', index)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-6 border-t">
+                <Button onClick={saveProduct} className="flex-1">
+                  {editingProduct === 'new' ? 'Cadastrar Produto' : 'Salvar Alterações'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    resetProductForm();
+                    setActiveTab('products');
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Banner Management Tab */}
+          {activeTab === 'banners' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Gerenciar Banners</h3>
+                <Button 
+                  onClick={() => {
+                    setEditingBanner('new');
+                    setBannerForm({ name: '', image: '', active: true });
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Novo Banner
+                </Button>
+              </div>
+
+              {/* Banner List */}
+              {banners.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <ImageIcon size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>Nenhum banner cadastrado ainda.</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {banners.map((banner) => (
+                    <div key={banner.id} className="border rounded-lg overflow-hidden">
+                      <div className="aspect-video bg-gray-100 relative">
+                        {banner.image ? (
+                          <img 
+                            src={banner.image} 
+                            alt={banner.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ImageIcon size={32} className="text-gray-400" />
+                          </div>
+                        )}
+                        <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${
+                          banner.active ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'
+                        }`}>
+                          {banner.active ? 'Ativo' : 'Inativo'}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h4 className="font-medium mb-2">{banner.name}</h4>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleBannerStatus(banner.id)}
+                          >
+                            {banner.active ? 'Desativar' : 'Ativar'}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingBanner(banner.id);
+                              setBannerForm({
+                                name: banner.name,
+                                image: banner.image,
+                                active: banner.active
+                              });
+                            }}
+                          >
+                            <Edit3 size={14} />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteBanner(banner.id)}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Banner Form */}
+              {editingBanner && (
+                <div className="p-6 bg-gray-50 rounded-lg space-y-4">
+                  <h4 className="font-medium">
+                    {editingBanner === 'new' ? 'Novo Banner' : 'Editar Banner'}
+                  </h4>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Nome do Banner *</label>
+                      <Input
+                        value={bannerForm.name}
+                        onChange={(e) => setBannerForm(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Ex: Banner Principal"
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="bannerActive"
+                        checked={bannerForm.active}
+                        onChange={(e) => setBannerForm(prev => ({ ...prev, active: e.target.checked }))}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="bannerActive" className="text-sm font-medium">
+                        Banner ativo
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Imagem do Banner *</label>
+                    <div className="space-y-4">
+                      {bannerForm.image && (
+                        <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden max-w-md">
+                          <img 
+                            src={bannerForm.image} 
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <label className="cursor-pointer inline-block">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                          <Upload size={16} />
+                          {bannerForm.image ? 'Trocar Imagem' : 'Carregar Imagem'}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'banner')}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button onClick={saveBanner}>
+                      {editingBanner === 'new' ? 'Criar Banner' : 'Salvar Alterações'}
+                    </Button>
+                    <Button variant="outline" onClick={resetBannerForm}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminPanel;

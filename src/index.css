@@ -1,0 +1,193 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* VitaFit Farma Design System - Pharmacy Colors & Animations */
+
+@layer base {
+  :root {
+    /* VitaFit Brand Colors (HSL) - Editable via Admin */
+    --brandA: 185 100% 21%; /* #0B6A6D - Teal */
+    --brandB: 142 71% 45%; /* #22C55E - Green */
+    
+    /* Legacy color compatibility */
+    --primary: var(--brandA);
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: var(--brandB);
+    --secondary-foreground: 0 0% 100%;
+    
+    --accent-cyan: 186 86% 53%; /* #22D3EE */
+    --accent-green: 152 76% 53%; /* #34D399 */
+    
+    --text-primary: 220 91% 16%; /* #0F172A */
+    --text-muted: 215 25% 27%; /* #475569 */
+    
+    --background: 210 20% 98%; /* #F8FAFC */
+    --background-gradient-end: 0 0% 100%;
+    
+    /* Glass & Card Styling */
+    --glass-bg: 0 0% 100% / 0.8;
+    --glass-border: 220 91% 16% / 0.1;
+    --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Form & Interactive */
+    --input: 220 13% 91%;
+    --border: 220 13% 91%;
+    --ring: 199 89% 48%;
+    --radius: 1rem;
+    
+    /* Status Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 158 64% 52%;
+    --warning: 43 89% 38%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-gradient-to-b from-background to-background-gradient-end text-text-primary font-sans antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* VitaFit Animations & Effects */
+@layer utilities {
+  
+  /* Blinking CTA Animation */
+  @keyframes pulseBlink {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7);
+    }
+    50% {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 10px hsl(var(--primary) / 0);
+    }
+  }
+
+  @keyframes pulseGreen {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--secondary) / 0.7);
+    }
+    50% {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 10px hsl(var(--secondary) / 0);
+    }
+  }
+
+  /* Fade animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(100%); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Animation Classes */
+  .animate-pulse-blink {
+    animation: pulseBlink 2s infinite;
+  }
+
+  .animate-pulse-green {
+    animation: pulseGreen 2s infinite;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  /* Pause animation on hover/focus */
+  .animate-pulse-blink:hover,
+  .animate-pulse-blink:focus-visible,
+  .animate-pulse-green:hover,
+  .animate-pulse-green:focus-visible {
+    animation-play-state: paused;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pulse-blink,
+    .animate-pulse-green,
+    .animate-fade-in,
+    .animate-slide-up {
+      animation: none;
+    }
+  }
+
+  /* Admin Button Hiding Fallback */
+  [data-admin-trigger], 
+  .btn-admin, 
+  #admin-fab, 
+  .admin-gear {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Brand gradient utilities */
+  .bg-brand-gradient {
+    background: linear-gradient(90deg, hsl(var(--brandA)), hsl(var(--brandB)));
+  }
+
+  .bg-brand-gradient-overlay {
+    background: linear-gradient(90deg, hsl(var(--brandA) / 0.1), hsl(var(--brandB) / 0.1));
+  }
+
+  /* Scroll behavior for logo shrink */
+  .logo-shrink {
+    transition: all 0.3s ease;
+  }
+
+  .logo-compact .logo-full {
+    display: none;
+  }
+
+  .logo-compact .logo-mark {
+    display: block;
+  }
+
+  .logo-mark {
+    display: none;
+  }
+
+  /* Glass morphism effect */
+  .glass-card {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--card-shadow);
+  }
+
+  /* Custom focus styles */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
