@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Settings, Upload, Plus, Trash2, ImageIcon, Eye, Edit3, EyeOff, Pencil } from 'lucide-react';
+import { X, Settings, Upload, Plus, Trash2, Image as ImageIcon, Eye, CreditCard as Edit3, EyeOff, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
