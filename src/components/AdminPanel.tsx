@@ -216,6 +216,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     }
     
     saveInactiveProducts(newInactiveProducts);
+    
+    // Force a page reload to update the main site immediately
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   // Get all products (default + custom)
@@ -304,6 +309,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       newValue: JSON.stringify(newProducts)
     }));
     
+    // Force a page reload to update the main site immediately
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+    
     toast({
       title: "Sucesso",
       description: editingProduct === 'new' ? "Produto criado!" : "Produto atualizado!",
@@ -332,6 +342,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     delete newProducts[productId];
     onCustomProductsChange(newProducts);
     localStorage.setItem('customProducts', JSON.stringify(newProducts));
+    
+    // Trigger a storage event to update other tabs/components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'customProducts',
+      newValue: JSON.stringify(newProducts)
+    }));
+    
+    // Force a page reload to update the main site immediately
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
     
     toast({
       title: "Produto excluído",
@@ -534,7 +555,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                             </TableCell>
                             <TableCell>
                               {product.doses?.[0]?.price ? 
-                                `R$ ${product.doses[0].price.toLocaleString('pt-BR')}` : 
+                                `A partir de R$ ${product.doses[0].price.toLocaleString('pt-BR')}` : 
                                 'Sob consulta'
                               }
                             </TableCell>

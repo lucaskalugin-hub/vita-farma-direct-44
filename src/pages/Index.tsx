@@ -409,28 +409,28 @@ const VitaFitFarma = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-background-gradient-end">
       {/* Header */}
       <header className={`sticky top-0 z-50 transition-shadow duration-200 ${headerShadow ? 'shadow-lg' : ''} bg-brand-gradient backdrop-blur-sm`}>
-        <div className="container mx-auto px-4 py-1">
+        <div className="container mx-auto px-4 py-2 md:py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className={`logo-shrink ${logoCompact ? 'logo-compact' : ''} relative z-20 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg`}>
+            <div className={`logo-shrink ${logoCompact ? 'logo-compact' : ''} relative z-20 bg-white/90 backdrop-blur-sm p-2 md:p-3 rounded-lg shadow-lg`}>
               <div className="flex items-center gap-2">
-                <VialLeafIcon size={logoCompact ? 28 : 32} className="logo-mark" />
+                <VialLeafIcon size={logoCompact ? 24 : 28} className="logo-mark md:hidden" />
                 <div className="logo-full">
                   <img 
                     src="https://i.ibb.co/N6jMRywM/logo-vitafit-fundobranco-removebg-preview.png" 
                     alt="VitaFit Farma" 
-                    className="h-8 w-8 md:h-10 md:w-10"
+                    className="h-6 w-6 md:h-8 md:w-8 lg:h-10 lg:w-10"
                     loading="eager"
                   />
                 </div>
-                <div className="logo-mark">
-                  <span className="text-primary font-bold text-lg">VitaFit</span>
+                <div className="logo-mark md:hidden">
+                  <span className="text-primary font-bold text-sm md:text-lg">VitaFit</span>
                 </div>
               </div>
             </div>
 
             {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden lg:flex items-center space-x-6">
               {[
                 { name: 'Início', id: 'inicio' },
                 { name: 'Como Comprar', id: 'como-comprar' },
@@ -450,11 +450,12 @@ const VitaFitFarma = () => {
 
             {/* WhatsApp CTA */}
             <WppLink
-              className="flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-xl font-medium animate-pulse-green focus-ring backdrop-blur-sm"
+              className="flex items-center gap-1 md:gap-2 bg-white/20 text-white px-2 md:px-4 py-2 rounded-xl font-medium animate-pulse-green focus-ring backdrop-blur-sm text-sm md:text-base"
               ariaLabel="Falar no WhatsApp"
             >
-              <WhatsAppIcon size={18} />
+              <WhatsAppIcon size={16} />
               <span className="hidden sm:inline">Falar no WhatsApp</span>
+              <span className="sm:hidden">WhatsApp</span>
             </WppLink>
 
           </div>
@@ -463,17 +464,17 @@ const VitaFitFarma = () => {
 
       {/* Regional Minimum Banner - Separated */}
       {showBanner && (
-        <div className="bg-red-600 text-white py-2 px-4 animate-fade-in shadow-md">
+        <div className="bg-red-600 text-white py-3 md:py-2 px-4 animate-fade-in shadow-md">
           <div className="container mx-auto flex items-center justify-between">
-            <p className="text-sm font-bold text-white drop-shadow-sm">
+            <p className="text-xs md:text-sm font-bold text-white drop-shadow-sm leading-tight">
               PR • SC • RS: pedido mínimo 2 caixas • Outras regiões: mínimo 5 caixas
             </p>
             <button
               onClick={() => setShowBanner(false)}
-              className="text-white hover:bg-white/20 rounded p-1 focus-ring"
+              className="text-white hover:bg-white/20 rounded p-1 focus-ring flex-shrink-0 ml-2"
               aria-label="Fechar banner"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -482,7 +483,7 @@ const VitaFitFarma = () => {
       {/* Hero Section */}
       <section id="inicio" className="relative">
         {/* Banner Image */}
-        <div className="relative h-[210px] sm:h-[260px] lg:h-[360px] overflow-hidden rounded-b-2xl">
+        <div className="relative h-[180px] sm:h-[210px] md:h-[260px] lg:h-[360px] overflow-hidden rounded-b-2xl">
           <img
             src={heroBackground}
             alt="VitaFit Farma - Medicamentos diversos"
@@ -503,20 +504,20 @@ const VitaFitFarma = () => {
 
       {/* Como Comprar */}
       <section id="como-comprar" className="py-16 bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Como Comprar</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">Como Comprar</h2>
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             {[
               { step: '1', title: 'Escolha o produto e a dose', desc: 'Navegue pelos nossos produtos TG e Lipoless e selecione a dose ideal.' },
               { step: '2', title: 'Clique em "Pedir no WhatsApp"', desc: 'Preencha os dados do pedido e clique no botão verde para ir ao WhatsApp.' },
               { step: '3', title: 'Confirme cidade e quantidade', desc: 'Nossa equipe responderá rapidamente com o valor final e forma de pagamento.' }
             ].map(item => (
-              <div key={item.step} className="glass-card rounded-2xl p-6 text-center animate-fade-in">
-                <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
+              <div key={item.step} className="glass-card rounded-2xl p-4 md:p-6 text-center animate-fade-in">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg md:text-xl font-bold mx-auto mb-3 md:mb-4">
                   {item.step}
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-text-muted">{item.desc}</p>
+                <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3">{item.title}</h3>
+                <p className="text-text-muted text-sm md:text-base">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -530,16 +531,16 @@ const VitaFitFarma = () => {
 
       {/* Produtos */}
       <section id="produtos" className="py-16 bg-white/50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Produtos & Preços</h2>
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8">Produtos & Preços</h2>
           
           {/* Filters */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8 md:mb-12 px-2">
             {['Todos', 'TG (ampolas)', 'Lipoless (ampolas/caneta)', 'Outros (sob prescrição)'].map(filter => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-2 rounded-full font-medium transition-colors focus-ring ${
+                className={`px-3 md:px-4 py-2 rounded-full font-medium transition-colors focus-ring text-xs md:text-sm ${
                   activeFilter === filter
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-white/80 text-text-muted hover:bg-primary/10'
@@ -551,10 +552,10 @@ const VitaFitFarma = () => {
           </div>
 
           {/* Product Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             {filteredProducts.map(product => (
-              <div key={product.id} className="glass-card rounded-2xl p-6 animate-fade-in">
-                <div className="aspect-square bg-gray-100 rounded-xl mb-4 overflow-hidden">
+              <div key={product.id} className="glass-card rounded-2xl p-4 md:p-6 animate-fade-in">
+                <div className="aspect-square bg-gray-100 rounded-xl mb-3 md:mb-4 overflow-hidden">
                   <img
                     src={product.doses[0]?.image}
                     alt={product.name}
@@ -564,24 +565,24 @@ const VitaFitFarma = () => {
                   />
                 </div>
                 
-                <h3 className="text-xl font-bold mb-2">{product.name}</h3>
-                <p className="text-text-muted mb-4">{product.subtitle}</p>
+                <h3 className="text-lg md:text-xl font-bold mb-2 leading-tight">{product.name}</h3>
+                <p className="text-text-muted mb-3 md:mb-4 text-sm md:text-base">{product.subtitle}</p>
                 
                 {/* Dose chips */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-1 md:gap-2 mb-3 md:mb-4">
                   {product.doses.slice(0, 3).map(dose => (
-                    <span key={dose.value} className="bg-accent-cyan/20 text-accent-cyan px-2 py-1 rounded text-sm">
+                    <span key={dose.value} className="bg-accent-cyan/20 text-accent-cyan px-2 py-1 rounded text-xs md:text-sm">
                       {dose.label}
                     </span>
                   ))}
                   {product.doses.length > 3 && (
-                    <span className="text-text-muted text-sm">+{product.doses.length - 3} mais</span>
+                    <span className="text-text-muted text-xs md:text-sm">+{product.doses.length - 3} mais</span>
                   )}
                 </div>
 
-                <p className="text-lg font-semibold mb-4">
+                <p className="text-base md:text-lg font-semibold mb-3 md:mb-4">
                   {product.requiresPrescription ? (
-                    <span className="bg-warning/20 text-warning px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="bg-warning/20 text-warning px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium">
                       Sob consulta
                     </span>
                   ) : (
@@ -589,18 +590,18 @@ const VitaFitFarma = () => {
                   )}
                 </p>
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 md:gap-3">
                   <button
                     onClick={() => openProductModal(product)}
-                    className="flex-1 bg-gray-100 text-text-primary px-4 py-2 rounded-lg font-medium hover:bg-gray-200 focus-ring"
+                    className="flex-1 bg-gray-100 text-text-primary px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-gray-200 focus-ring text-sm md:text-base"
                   >
                     Ver detalhes
                   </button>
                   <WppLink
-                    className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium animate-pulse-green focus-ring flex items-center gap-2"
+                    className="bg-secondary text-secondary-foreground px-3 md:px-4 py-2 rounded-lg font-medium animate-pulse-green focus-ring flex items-center gap-1 md:gap-2 text-sm md:text-base"
                     ariaLabel={`Pedir ${product.name} no WhatsApp`}
                   >
-                    <WhatsAppIcon size={16} />
+                    <WhatsAppIcon size={14} />
                   </WppLink>
                 </div>
               </div>
@@ -616,17 +617,17 @@ const VitaFitFarma = () => {
 
       {/* Dúvidas */}
       <section id="duvidas" className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Dúvidas rápidas</h2>
-          <div className="max-w-3xl mx-auto space-y-6">
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">Dúvidas rápidas</h2>
+          <div className="max-w-3xl mx-auto space-y-4 md:space-y-6">
             {[
               { q: 'Como faço o pedido?', a: 'Escolha o produto, dose e quantidade, depois clique em "Pedir no WhatsApp". Nossa equipe responderá rapidamente.' },
               { q: 'Qual o mínimo por região?', a: 'PR, SC e RS: mínimo 2 caixas. Outras regiões: mínimo 5 caixas.' },
               { q: 'Quais regiões atendem?', a: 'Entregamos principalmente em PR, SC, RS e Grande SP. Consulte disponibilidade para outras regiões.' }
             ].map((faq, i) => (
-              <div key={i} className="glass-card rounded-xl p-6">
-                <h3 className="font-semibold text-lg mb-3">{faq.q}</h3>
-                <p className="text-text-muted">{faq.a}</p>
+              <div key={i} className="glass-card rounded-xl p-4 md:p-6">
+                <h3 className="font-semibold text-base md:text-lg mb-2 md:mb-3">{faq.q}</h3>
+                <p className="text-text-muted text-sm md:text-base">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -635,10 +636,10 @@ const VitaFitFarma = () => {
 
       {/* Sobre */}
       <section className="py-16 bg-white/50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Sobre a VitaFit</h2>
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8">Sobre a VitaFit</h2>
           <div className="max-w-4xl mx-auto text-center">
-            <p className="text-lg text-text-muted leading-relaxed">
+            <p className="text-base md:text-lg text-text-muted leading-relaxed">
               <strong>VitaFit Farma</strong> é uma farmácia moderna em Foz do Iguaçu que se destaca pelo acesso direto a medicamentos de ponta. 
               Nosso diferencial está em <strong>importar tirzepatida e outros produtos exclusivos do Paraguai e do mundo</strong>, oferecendo{' '}
               <strong>preços competitivos e venda em atacado</strong> para todo o Brasil. Atendimento rápido via WhatsApp.
@@ -649,18 +650,18 @@ const VitaFitFarma = () => {
 
       {/* Contato */}
       <section id="contato" className="py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-8">Contato</h2>
+        <div className="container mx-auto px-4 md:px-6 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Contato</h2>
           <div className="max-w-2xl mx-auto">
-            <div className="glass-card rounded-2xl p-8">
+            <div className="glass-card rounded-2xl p-6 md:p-8">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <MapPin size={20} className="text-primary" />
-                <p className="text-lg">417 R. Olávo Bilac — Foz do Iguaçu, PR</p>
+                <p className="text-base md:text-lg">417 R. Olávo Bilac — Foz do Iguaçu, PR</p>
               </div>
-              <p className="text-text-muted mb-6">
+              <p className="text-text-muted mb-4 md:mb-6 text-sm md:text-base">
                 Importa do Paraguai e do mundo e vende em atacado no Brasil
               </p>
-              <WppLink className="inline-flex items-center gap-3 bg-secondary text-secondary-foreground px-8 py-4 rounded-xl font-medium text-lg animate-pulse-green focus-ring">
+              <WppLink className="inline-flex items-center gap-2 md:gap-3 bg-secondary text-secondary-foreground px-6 md:px-8 py-3 md:py-4 rounded-xl font-medium text-base md:text-lg animate-pulse-green focus-ring">
                 <WhatsAppIcon size={24} />
                 Falar no WhatsApp
               </WppLink>
@@ -671,29 +672,29 @@ const VitaFitFarma = () => {
 
       {/* Footer */}
       <footer className="bg-brand-gradient text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center gap-4 mb-4 md:mb-0">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-left">
               <VialLeafIcon size={32} className="text-white" />
               <div>
                 <p className="font-semibold">VitaFit Farma</p>
-                <p className="text-sm text-white/80">417 R. Olávo Bilac — Foz do Iguaçu, PR</p>
+                <p className="text-xs md:text-sm text-white/80">417 R. Olávo Bilac — Foz do Iguaçu, PR</p>
               </div>
             </div>
             
-            <nav className="flex flex-wrap justify-center gap-6 mb-4 md:mb-0">
+            <nav className="flex flex-wrap justify-center gap-4 md:gap-6 order-3 md:order-2">
               {['Início', 'Produtos', 'Dúvidas', 'Contato'].map(item => (
                 <button
                   key={item}
                   onClick={() => scrollToSection(item.toLowerCase().replace('ú', 'u').replace('í', 'i'))}
-                  className="text-white/80 hover:text-white transition-colors focus-ring rounded px-2 py-1"
+                  className="text-white/80 hover:text-white transition-colors focus-ring rounded px-2 py-1 text-sm md:text-base"
                 >
                   {item}
                 </button>
               ))}
             </nav>
             
-            <p className="text-sm text-white/60">
+            <p className="text-xs md:text-sm text-white/60 order-2 md:order-3">
               © {new Date().getFullYear()} VitaFit Farma
             </p>
           </div>
@@ -701,41 +702,41 @@ const VitaFitFarma = () => {
       </footer>
 
       {/* Floating WhatsApp Button */}
-      <div className="fixed bottom-4 right-4 z-40 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="fixed bottom-4 right-4 z-40 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <WppLink
-          className={`flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-3 rounded-full font-medium shadow-lg backdrop-blur-sm ${
+          className={`flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded-full font-medium shadow-lg backdrop-blur-sm ${
             window.matchMedia('(prefers-reduced-motion: reduce)').matches ? '' : 'animate-pulse-green'
-          } focus-ring`}
+          } focus-ring text-sm`}
           ariaLabel="Resposta imediata no WhatsApp"
         >
-          <WhatsAppIcon size={20} />
-          <span className="text-sm">Resposta imediata</span>
+          <WhatsAppIcon size={18} />
+          <span>Resposta imediata</span>
         </WppLink>
       </div>
 
 
       {/* Product Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 animate-fade-in" role="dialog" aria-modal="true">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto animate-slide-up">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-2 md:p-4 z-50 animate-fade-in" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] md:max-h-[90vh] overflow-auto animate-slide-up">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <nav className="text-sm text-text-muted">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+              <nav className="text-xs md:text-sm text-text-muted">
                 <span>Início</span> › <span>Produtos</span> › <span className="text-text-primary">{selectedProduct.name}</span>
               </nav>
               <button
                 onClick={() => setSelectedProduct(null)}
-                className="text-gray-400 hover:text-gray-600 focus-ring rounded p-1"
+                className="text-gray-400 hover:text-gray-600 focus-ring rounded p-1 flex-shrink-0"
                 aria-label="Fechar modal"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8 p-6">
+            <div className="grid lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 p-4 md:p-6">
               {/* Product Image & Info */}
               <div>
-                <div className="aspect-square bg-gray-100 rounded-xl mb-6 overflow-hidden">
+                <div className="aspect-square bg-gray-100 rounded-xl mb-4 md:mb-6 overflow-hidden">
                   <img
                     src={getProducts()[selectedProduct.id].doses.find(d => d.value === formData.dose)?.image || selectedProduct.doses[0]?.image}
                     alt={`${selectedProduct.name} - ${formData.dose}`}
@@ -744,27 +745,27 @@ const VitaFitFarma = () => {
                   />
                 </div>
                 
-                <h1 className="text-2xl font-bold mb-3">{selectedProduct.name}</h1>
-                <div className="space-y-2">
+                <h1 className="text-xl md:text-2xl font-bold mb-2 md:mb-3">{selectedProduct.name}</h1>
+                <div className="space-y-1 md:space-y-2">
                   {selectedProduct.description.map((item, i) => (
-                    <p key={i} className="text-text-muted">{item}</p>
+                    <p key={i} className="text-text-muted text-sm md:text-base">{item}</p>
                   ))}
                 </div>
               </div>
 
               {/* Order Form */}
               <div className="lg:sticky lg:top-24">
-                <div className="glass-card rounded-xl p-6">
-                  <h2 className="text-xl font-semibold mb-6">Fazer Pedido</h2>
+                <div className="glass-card rounded-xl p-4 md:p-6">
+                  <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Fazer Pedido</h2>
                   
                   {/* Dose Selection */}
-                  <div className="mb-6">
+                  <div className="mb-4 md:mb-6">
                     <label className="block text-sm font-medium mb-2">Dose</label>
                     <div className="relative">
                       <select
                         value={formData.dose}
                         onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
-                        className="w-full p-3 border border-input rounded-lg bg-white focus-ring appearance-none"
+                        className="w-full p-2 md:p-3 border border-input rounded-lg bg-white focus-ring appearance-none text-sm md:text-base"
                       >
                         {getProducts()[selectedProduct.id].doses.map(dose => (
                           <option key={dose.value} value={dose.value} disabled={dose.unavailable}>
@@ -778,13 +779,13 @@ const VitaFitFarma = () => {
 
                   {/* Forma Selection (Lipoless only) */}
                   {selectedProduct.id === 'lipoless' && (
-                    <div className="mb-6">
+                    <div className="mb-4 md:mb-6">
                       <label className="block text-sm font-medium mb-2">Forma</label>
                       <div className="relative">
                         <select
                           value={formData.forma}
                           onChange={(e) => setFormData(prev => ({ ...prev, forma: e.target.value }))}
-                          className="w-full p-3 border border-input rounded-lg bg-white focus-ring appearance-none"
+                          className="w-full p-2 md:p-3 border border-input rounded-lg bg-white focus-ring appearance-none text-sm md:text-base"
                         >
                           {getProducts()[selectedProduct.id].formaOptions?.map(forma => {
                             const isCanetaAvailable = formData.dose === '10mg';
@@ -803,13 +804,13 @@ const VitaFitFarma = () => {
                   )}
 
                   {/* UF Selection */}
-                  <div className="mb-6">
+                  <div className="mb-4 md:mb-6">
                     <label className="block text-sm font-medium mb-2">Estado/UF</label>
                     <div className="relative">
                       <select
                         value={formData.uf}
                         onChange={(e) => setFormData(prev => ({ ...prev, uf: e.target.value, quantidade: getMinBoxes(e.target.value) }))}
-                        className="w-full p-3 border border-input rounded-lg bg-white focus-ring appearance-none"
+                        className="w-full p-2 md:p-3 border border-input rounded-lg bg-white focus-ring appearance-none text-sm md:text-base"
                       >
                         {ESTADOS_BR.map(uf => (
                           <option key={uf} value={uf}>{uf}</option>
@@ -820,43 +821,43 @@ const VitaFitFarma = () => {
                   </div>
 
                   {/* Cidade */}
-                  <div className="mb-6">
+                  <div className="mb-4 md:mb-6">
                     <label className="block text-sm font-medium mb-2">Cidade</label>
                     <input
                       type="text"
                       value={formData.cidade}
                       onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
-                      className="w-full p-3 border border-input rounded-lg bg-white focus-ring"
+                      className="w-full p-2 md:p-3 border border-input rounded-lg bg-white focus-ring text-sm md:text-base"
                       placeholder="Digite sua cidade"
                     />
                   </div>
 
                   {/* Quantidade */}
-                  <div className="mb-6">
+                  <div className="mb-4 md:mb-6">
                     <label className="block text-sm font-medium mb-2">
                       Quantidade (caixas) - Mínimo: {getMinBoxes(formData.uf)}
                     </label>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3">
                       <button
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, quantidade: Math.max(1, prev.quantidade - 1) }))}
-                        className="w-10 h-10 border border-input rounded-lg flex items-center justify-center hover:bg-gray-50 focus-ring"
+                        className="w-8 h-8 md:w-10 md:h-10 border border-input rounded-lg flex items-center justify-center hover:bg-gray-50 focus-ring"
                       >
-                        <Minus size={16} />
+                        <Minus size={14} />
                       </button>
                       <input
                         type="number"
                         value={formData.quantidade}
                         onChange={(e) => setFormData(prev => ({ ...prev, quantidade: parseInt(e.target.value) || 1 }))}
-                        className="flex-1 p-3 border border-input rounded-lg bg-white focus-ring text-center"
+                        className="flex-1 p-2 md:p-3 border border-input rounded-lg bg-white focus-ring text-center text-sm md:text-base"
                         min="1"
                       />
                       <button
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, quantidade: prev.quantidade + 1 }))}
-                        className="w-10 h-10 border border-input rounded-lg flex items-center justify-center hover:bg-gray-50 focus-ring"
+                        className="w-8 h-8 md:w-10 md:h-10 border border-input rounded-lg flex items-center justify-center hover:bg-gray-50 focus-ring"
                       >
-                        <Plus size={16} />
+                        <Plus size={14} />
                       </button>
                     </div>
                     {formData.quantidade < getMinBoxes(formData.uf) && (
@@ -867,10 +868,10 @@ const VitaFitFarma = () => {
                   </div>
 
                   {/* Price Display */}
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gray-50 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-text-muted">Preço por dose:</span>
-                      <span className="text-xl font-bold text-primary">
+                      <span className="text-lg md:text-xl font-bold text-primary">
                         {selectedProduct.requiresPrescription 
                           ? 'Sob consulta'
                           : getCurrentPrice() > 0 
@@ -883,7 +884,7 @@ const VitaFitFarma = () => {
 
                   {/* Prescription Checkbox (for prescription products) */}
                   {selectedProduct.requiresPrescription && (
-                    <div className="mb-6">
+                    <div className="mb-4 md:mb-6">
                       <label className="flex items-start gap-3 cursor-pointer">
                         <input
                           type="checkbox"
@@ -902,16 +903,16 @@ const VitaFitFarma = () => {
                   <div className={`w-full ${!isFormValid() ? 'pointer-events-none' : ''}`}>
                     <WppLink
                       params={isFormValid() ? getWhatsAppParams(selectedProduct) : {}}
-                      className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-medium text-lg focus-ring ${
+                      className={`w-full flex items-center justify-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 rounded-xl font-medium text-base md:text-lg focus-ring ${
                         isFormValid()
                           ? 'bg-secondary text-secondary-foreground animate-pulse-green'
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
                       ariaLabel={`Pedir ${selectedProduct.name} - ${formData.dose} no WhatsApp`}
                     >
-                      <WhatsAppIcon size={24} />
+                      <WhatsAppIcon size={20} />
                       Pedir no WhatsApp
-                      <ExternalLink size={18} />
+                      <ExternalLink size={16} />
                     </WppLink>
                   </div>
                 </div>

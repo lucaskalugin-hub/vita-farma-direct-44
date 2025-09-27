@@ -4,6 +4,37 @@
 
 /* VitaFit Farma Design System - Pharmacy Colors & Animations */
 
+/* Mobile-first responsive improvements */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Improve text readability on mobile */
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* Better spacing for mobile cards */
+  .glass-card {
+    padding: 1rem;
+  }
+  
+  /* Optimize button sizes for touch */
+  button, .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better modal positioning on mobile */
+  .modal-content {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+  }
+}
+
 @layer base {
   :root {
     /* VitaFit Brand Colors (HSL) - Editable via Admin */

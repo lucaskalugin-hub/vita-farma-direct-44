@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import AdminPanel from '../components/AdminPanel';
 import AdminLogin from '../components/AdminLogin';
@@ -130,13 +130,13 @@ const AdminPage = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/')}
+            <Link
+              to="/"
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft size={20} />
               <span>Voltar ao Site</span>
-            </button>
+            </Link>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Painel Admin - VitaFit</h1>
         </div>
@@ -147,7 +147,7 @@ const AdminPage = () => {
         <div className="bg-white rounded-lg shadow-lg">
           <AdminPanel
             isOpen={true}
-            onClose={() => {}} // No close button needed since this is a dedicated page
+            onClose={() => navigate('/')} // Navigate to home when closing
             brandColors={brandColors}
             onBrandColorsChange={handleBrandColorsChange}
             customProducts={customProducts}
