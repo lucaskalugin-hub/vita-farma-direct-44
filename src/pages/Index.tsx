@@ -396,7 +396,7 @@ const VitaFitFarma = () => {
         <div className="container mx-auto px-4 py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className={`logo-shrink ${logoCompact ? 'logo-compact' : ''} relative z-20`}>
+            <div className={`logo-shrink ${logoCompact ? 'logo-compact' : ''} relative z-20 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg`}>
               <div className="flex items-center gap-2">
                 <VialLeafIcon size={logoCompact ? 28 : 32} className="logo-mark" />
                 <div className="logo-full">
@@ -447,7 +447,7 @@ const VitaFitFarma = () => {
 
       {/* Regional Minimum Banner - Separated */}
       {showBanner && (
-        <div className="bg-red-600 text-white py-3 px-4 animate-fade-in shadow-md">
+        <div className="bg-red-600 text-white py-2 px-4 animate-fade-in shadow-md">
           <div className="container mx-auto flex items-center justify-between">
             <p className="text-sm font-bold text-white drop-shadow-sm">
               PR • SC • RS: pedido mínimo 2 caixas • Outras regiões: mínimo 5 caixas
