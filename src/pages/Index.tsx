@@ -412,21 +412,14 @@ const VitaFitFarma = () => {
         <div className="container mx-auto px-4 py-2 md:py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className={`logo-shrink ${logoCompact ? 'logo-compact' : ''} relative z-20 bg-white/90 backdrop-blur-sm p-2 md:p-3 rounded-lg shadow-lg`}>
-              <div className="flex items-center gap-2">
-                <VialLeafIcon size={logoCompact ? 24 : 28} className="logo-mark md:hidden" />
-                <div className="logo-full">
-                  <img 
-                    src="https://i.ibb.co/N6jMRywM/logo-vitafit-fundobranco-removebg-preview.png" 
-                    alt="VitaFit Farma" 
-                    className="h-6 w-6 md:h-8 md:w-8 lg:h-10 lg:w-10"
-                    loading="eager"
-                  />
-                </div>
-                <div className="logo-mark md:hidden">
-                  <span className="text-primary font-bold text-sm md:text-lg">VitaFit</span>
-                </div>
-              </div>
+            <div className="relative z-20 bg-white/90 backdrop-blur-sm p-2 md:p-3 rounded-lg shadow-lg flex items-center justify-center" style={{ minWidth: 56, minHeight: 56 }}>
+              <img
+                src="https://i.ibb.co/N6jMRywM/logo-vitafit-fundobranco-removebg-preview.png"
+                alt="VitaFit Farma"
+                className="h-10 w-10 md:h-12 md:w-12 lg:h-14 lg:w-14 object-contain"
+                style={{ display: 'block', margin: '0 auto' }}
+                loading="eager"
+              />
             </div>
 
             {/* Navigation */}
@@ -483,17 +476,17 @@ const VitaFitFarma = () => {
       {/* Hero Section */}
       <section id="inicio" className="relative">
         {/* Banner Image */}
-        <div className="relative h-[180px] sm:h-[210px] md:h-[260px] lg:h-[360px] overflow-hidden rounded-b-2xl">
+        <div className="relative h-[180px] sm:h-[210px] md:h-[260px] lg:h-[360px] overflow-hidden rounded-b-2xl bg-white flex items-center justify-center">
           <img
             src={heroBackground}
             alt="VitaFit Farma - Medicamentos diversos"
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center mx-auto select-none"
+            style={{ display: 'block', objectPosition: 'center' }}
             loading="eager"
+            draggable={false}
           />
           {/* Gradient overlay */}
           <div className="absolute inset-0 pointer-events-none opacity-10 bg-brand-gradient"></div>
-          
-          
         </div>
       </section>
 

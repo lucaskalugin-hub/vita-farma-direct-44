@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Settings, Upload, Plus, Trash2, Image as ImageIcon, Eye, CreditCard as Edit3, EyeOff, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 // Default products from the site
 const DEFAULT_PRODUCTS = {
@@ -164,10 +165,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   });
   
   // Banner management states
-  const [banners, setBanners] = useState<BannerData[]>(() => {
-    const saved = localStorage.getItem('siteBanners');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [banners, setBanners] = useState<BannerData[]>([]);
   const [editingBanner, setEditingBanner] = useState<string | null>(null);
   const [bannerForm, setBannerForm] = useState({
     name: '',
@@ -175,48 +173,119 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     active: true
   });
 
-  // Product visibility states
-  const [inactiveProducts, setInactiveProducts] = useState<string[]>(() => {
-    const saved = localStorage.getItem('inactiveProducts');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Estados de loading
+  const [loadingProduct, setLoadingProduct] = useState(false);
+  const [loadingBanner, setLoadingBanner] = useState(false);
+  const [loadingDeleteProduct, setLoadingDeleteProduct] = useState<string | null>(null);
+  const [loadingDeleteBanner, setLoadingDeleteBanner] = useState<string | null>(null);
+  const [loadingToggleProduct, setLoadingToggleProduct] = useState<string | null>(null);
+  const [loadingToggleBanner, setLoadingToggleBanner] = useState<string | null>(null);
 
-  // Save inactive products to localStorage
-  const saveInactiveProducts = (inactive: string[]) => {
-    setInactiveProducts(inactive);
-    localStorage.setItem('inactiveProducts', JSON.stringify(inactive));
-    
-    // Trigger a storage event to update other tabs/components
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'inactiveProducts',
-      newValue: JSON.stringify(inactive)
-    }));
+  // Estado de produtos inativos agora será controlado pelo Supabase (campo active)
+  // Não precisamos mais de inactiveProducts local
+  // Produtos customizados do Supabase
+  const [customProductsState, setCustomProductsState] = useState<any>({});
+
+  // Função para buscar produtos do Supabase
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('*');
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para acessar os produtos.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao buscar produtos', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+      const productsObj: any = {};
+      data?.forEach((p: any) => {
+        productsObj[p.id] = {
+          id: p.id,
+          name: p.nome,
+          subtitle: p.subtitulo,
+          category: p.categoria,
+          requiresPrescription: p.requires_prescription,
+          description: p.descricao || [],
+          doses: p.doses || [],
+          formaOptions: p.forma_options || [],
+          active: p.active !== false
+        };
+      });
+      setCustomProductsState(productsObj);
+    } catch (err: any) {
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao buscar produtos. Tente novamente.', variant: 'destructive' });
+    }
   };
 
-  // Toggle product active/inactive status
-  const toggleProductStatus = (productId: string) => {
-    const isInactive = inactiveProducts.includes(productId);
-    let newInactiveProducts;
-    if (isInactive) {
-      // Ativar produto
-      newInactiveProducts = inactiveProducts.filter(id => id !== productId);
-    } else {
-      // Inativar produto
-      newInactiveProducts = [...inactiveProducts, productId];
+  // Função para buscar banners do Supabase
+  const fetchBanners = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('banners')
+        .select('*');
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para acessar os banners.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao buscar banners', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+      setBanners(data || []);
+    } catch (err: any) {
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao buscar banners. Tente novamente.', variant: 'destructive' });
     }
-    saveInactiveProducts(newInactiveProducts);
-    toast({
-      title: "Salvo com sucesso",
-      description: isInactive ? "Produto ativado!" : "Produto inativado!",
-    });
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
+  };
+
+  // Buscar produtos e banners ao abrir o painel
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchProducts();
+    fetchBanners();
+  }, [isOpen]);
+
+
+  // Toggle product active/inactive status via Supabase
+  const toggleProductStatus = async (productId: string) => {
+    const product = customProductsState[productId];
+    if (!product) return;
+    try {
+      setLoadingToggleProduct(productId);
+      const newActive = !product.active;
+      const { error } = await supabase.from('produtos').update({ active: newActive }).eq('id', productId);
+      setLoadingToggleProduct(null);
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para atualizar status.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao atualizar status do produto', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+      toast({
+        title: "Salvo com sucesso",
+        description: newActive ? "Produto ativado!" : "Produto inativado!",
+      });
+      fetchProducts();
+    } catch (err: any) {
+      setLoadingToggleProduct(null);
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao atualizar status do produto. Tente novamente.', variant: 'destructive' });
+    }
   };
 
   // Get all products (default + custom)
   const getAllProducts = () => {
-    return { ...DEFAULT_PRODUCTS, ...customProducts };
+    // Só os customizados têm campo active, os default são sempre ativos
+    return { ...DEFAULT_PRODUCTS, ...customProductsState };
   };
 
   // Product management functions
@@ -273,51 +342,121 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
-  const saveProduct = () => {
-    if (!productForm.name.trim()) {
+  const saveProduct = async () => {
+    if (loadingProduct) return;
+    try {
+      // Validações obrigatórias
+      if (!productForm.name.trim()) {
+        toast({
+          title: "Erro",
+          description: "Nome do produto é obrigatório",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!productForm.category) {
+        toast({
+          title: "Erro",
+          description: "Categoria é obrigatória",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!productForm.doses || !Array.isArray(productForm.doses) || productForm.doses.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Pelo menos uma dose é obrigatória",
+          variant: "destructive"
+        });
+        return;
+      }
+      // Pelo menos uma descrição preenchida
+      const filledDescriptions = productForm.description.filter((d) => d && d.trim() !== '');
+      if (filledDescriptions.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Pelo menos uma descrição é obrigatória",
+          variant: "destructive"
+        });
+        return;
+      }
+      for (let i = 0; i < productForm.doses.length; i++) {
+        const d = productForm.doses[i];
+        if (!d.value.trim() || !d.label.trim()) {
+          toast({
+            title: "Erro",
+            description: `Preencha valor e label da dose ${i + 1}`,
+            variant: "destructive"
+          });
+          return;
+        }
+        if (!d.image) {
+          toast({
+            title: "Erro",
+            description: `Imagem da dose ${i + 1} é obrigatória`,
+            variant: "destructive"
+          });
+          return;
+        }
+        // Se não for sob consulta, preço deve ser maior que zero
+        if (d.price !== 0 && (!d.price || d.price <= 0)) {
+          toast({
+            title: "Erro",
+            description: `Preço da dose ${i + 1} deve ser maior que zero ou marcado como 'Sob consulta'`,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      const isNew = editingProduct === 'new';
+      let productId = editingProduct;
+      if (isNew) {
+        productId = undefined;
+      }
+
+      const dbProduct = {
+        nome: productForm.name,
+        subtitulo: productForm.subtitle,
+        categoria: productForm.category,
+        requires_prescription: productForm.requiresPrescription,
+        descricao: productForm.description.map(d => d.trim()).filter(Boolean),
+        doses: productForm.doses,
+        forma_options: productForm.formaOptions || []
+      };
+
+      setLoadingProduct(true);
+      let result;
+      if (isNew) {
+        result = await supabase.from('produtos').insert([dbProduct]);
+      } else {
+        result = await supabase.from('produtos').update(dbProduct).eq('id', productId);
+      }
+      setLoadingProduct(false);
+      const { error } = result;
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para salvar produtos.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao salvar produto', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+
       toast({
-        title: "Erro",
-        description: "Nome do produto é obrigatório",
-        variant: "destructive"
+        title: "Salvo com sucesso",
+        description: isNew ? "Produto cadastrado!" : "Produto atualizado!",
       });
-      return;
+
+      fetchProducts();
+      resetProductForm();
+      setEditingProduct(null);
+    } catch (err: any) {
+      setLoadingProduct(false);
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao salvar produto. Tente novamente.', variant: 'destructive' });
     }
-
-    const productId = editingProduct === 'new'
-      ? generateProductId(productForm.name)
-      : editingProduct!;
-
-    const newProduct = {
-      id: productId,
-      ...productForm,
-      description: productForm.description.map(d => d.trim()).filter(Boolean)
-    };
-
-    // Atualiza ou adiciona produto customizado
-    const newProducts = { ...customProducts };
-    newProducts[productId] = newProduct;
-    onCustomProductsChange(newProducts);
-    localStorage.setItem('customProducts', JSON.stringify(newProducts));
-
-    // Trigger a storage event para atualizar outras abas/componentes
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'customProducts',
-      newValue: JSON.stringify(newProducts)
-    }));
-
-    toast({
-      title: "Salvo com sucesso",
-      description: editingProduct === 'new' ? "Produto cadastrado!" : "Produto atualizado!",
-    });
-
-    // Resetar formulário e estado de edição
-    resetProductForm();
-    setEditingProduct(null);
-
-    // Forçar reload imediato para garantir atualização na mesma aba
-    setTimeout(() => {
-      window.location.reload();
-    }, 300);
   };
 
   const resetProductForm = () => {
@@ -333,29 +472,31 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     });
   };
 
-  const deleteProduct = (productId: string) => {
+  const deleteProduct = async (productId: string) => {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-    
-    const newProducts = { ...customProducts };
-    delete newProducts[productId];
-    onCustomProductsChange(newProducts);
-    localStorage.setItem('customProducts', JSON.stringify(newProducts));
-    
-    // Trigger a storage event to update other tabs/components
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'customProducts',
-      newValue: JSON.stringify(newProducts)
-    }));
-    
-    // Force a page reload to update the main site immediately
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-    
-    toast({
-      title: "Produto excluído",
-      description: "Produto removido com sucesso",
-    });
+    try {
+      setLoadingDeleteProduct(productId);
+      const { error } = await supabase.from('produtos').delete().eq('id', productId);
+      setLoadingDeleteProduct(null);
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para excluir produtos.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao excluir produto', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+      toast({
+        title: "Produto excluído",
+        description: "Produto removido com sucesso",
+      });
+      fetchProducts();
+    } catch (err: any) {
+      setLoadingDeleteProduct(null);
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao excluir produto. Tente novamente.', variant: 'destructive' });
+    }
   };
 
   const editProduct = (product: any) => {
@@ -374,39 +515,72 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     setActiveTab('new-product');
   };
 
-  // Banner management functions
-  const saveBanner = () => {
-    if (!bannerForm.name.trim() || !bannerForm.image) {
+
+  // Banner management functions (Supabase)
+  const saveBanner = async () => {
+    if (loadingBanner) return;
+    try {
+      // Validações obrigatórias
+      if (!bannerForm.name.trim()) {
+        toast({
+          title: "Erro",
+          description: "Nome do banner é obrigatório",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!bannerForm.image) {
+        toast({
+          title: "Erro",
+          description: "Imagem do banner é obrigatória",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const isNew = editingBanner === 'new';
+      let bannerId = editingBanner;
+      if (isNew) {
+        bannerId = undefined;
+      }
+
+      const dbBanner = {
+        name: bannerForm.name,
+        image: bannerForm.image,
+        active: bannerForm.active
+      };
+
+      setLoadingBanner(true);
+      let result;
+      if (isNew) {
+        result = await supabase.from('banners').insert([dbBanner]);
+      } else {
+        result = await supabase.from('banners').update(dbBanner).eq('id', bannerId);
+      }
+      setLoadingBanner(false);
+      const { error } = result;
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para salvar banners.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao salvar banner', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+
       toast({
-        title: "Erro",
-        description: "Nome e imagem são obrigatórios",
-        variant: "destructive"
+        title: "Sucesso",
+        description: isNew ? "Banner criado!" : "Banner atualizado!",
       });
-      return;
+
+      fetchBanners();
+      resetBannerForm();
+    } catch (err: any) {
+      setLoadingBanner(false);
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao salvar banner. Tente novamente.', variant: 'destructive' });
     }
-
-    const bannerId = editingBanner === 'new' 
-      ? 'banner_' + Date.now().toString(36)
-      : editingBanner!;
-
-    const newBanner = {
-      id: bannerId,
-      ...bannerForm
-    };
-
-    const newBanners = editingBanner === 'new' 
-      ? [...banners, newBanner]
-      : banners.map(b => b.id === bannerId ? newBanner : b);
-
-    setBanners(newBanners);
-    localStorage.setItem('siteBanners', JSON.stringify(newBanners));
-    
-    toast({
-      title: "Sucesso",
-      description: editingBanner === 'new' ? "Banner criado!" : "Banner atualizado!",
-    });
-
-    resetBannerForm();
   };
 
   const resetBannerForm = () => {
@@ -418,25 +592,55 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     });
   };
 
-  const deleteBanner = (bannerId: string) => {
+  const deleteBanner = async (bannerId: string) => {
     if (!confirm('Tem certeza que deseja excluir este banner?')) return;
-    
-    const newBanners = banners.filter(b => b.id !== bannerId);
-    setBanners(newBanners);
-    localStorage.setItem('siteBanners', JSON.stringify(newBanners));
-    
-    toast({
-      title: "Banner excluído",
-      description: "Banner removido com sucesso",
-    });
+    try {
+      setLoadingDeleteBanner(bannerId);
+      const { error } = await supabase.from('banners').delete().eq('id', bannerId);
+      setLoadingDeleteBanner(null);
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para excluir banners.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao excluir banner', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+      toast({
+        title: "Banner excluído",
+        description: "Banner removido com sucesso",
+      });
+      fetchBanners();
+    } catch (err: any) {
+      setLoadingDeleteBanner(null);
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao excluir banner. Tente novamente.', variant: 'destructive' });
+    }
   };
 
-  const toggleBannerStatus = (bannerId: string) => {
-    const newBanners = banners.map(b => 
-      b.id === bannerId ? { ...b, active: !b.active } : b
-    );
-    setBanners(newBanners);
-    localStorage.setItem('siteBanners', JSON.stringify(newBanners));
+  const toggleBannerStatus = async (bannerId: string) => {
+    const banner = banners.find(b => b.id === bannerId);
+    if (!banner) return;
+    try {
+      setLoadingToggleBanner(bannerId);
+      const { error } = await supabase.from('banners').update({ active: !banner.active }).eq('id', bannerId);
+      setLoadingToggleBanner(null);
+      if (error) {
+        if (error.code === '28P01' || error.code === '42501') {
+          toast({ title: 'Acesso negado', description: 'Você não tem permissão para atualizar status.', variant: 'destructive' });
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Failed to fetch')) {
+          toast({ title: 'Erro de conexão', description: 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.', variant: 'destructive' });
+        } else {
+          toast({ title: 'Erro ao atualizar status do banner', description: error.message || 'Erro desconhecido', variant: 'destructive' });
+        }
+        return;
+      }
+      fetchBanners();
+    } catch (err: any) {
+      setLoadingToggleBanner(null);
+      toast({ title: 'Erro inesperado', description: 'Ocorreu um erro ao atualizar status do banner. Tente novamente.', variant: 'destructive' });
+    }
   };
 
   if (!isOpen) return null;
@@ -508,8 +712,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   <p>Nenhum produto disponível.</p>
                 </div>
               ) : (
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table className="min-w-[700px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Imagem</TableHead>
@@ -524,9 +728,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                     </TableHeader>
                     <TableBody>
                       {Object.values(getAllProducts()).map((product: any) => {
-                        const isInactive = inactiveProducts.includes(product.id);
                         const isDefault = DEFAULT_PRODUCTS.hasOwnProperty(product.id);
-                        
+                        // Produtos customizados usam campo active, default são sempre ativos
+                        const isInactive = !isDefault && product.active === false;
                         return (
                           <TableRow key={product.id} className={isInactive ? 'opacity-50' : ''}>
                             <TableCell>
@@ -606,8 +810,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                                   onClick={() => toggleProductStatus(product.id)}
                                   className="h-8 w-8 p-0"
                                   title={isInactive ? "Ativar produto" : "Inativar produto"}
+                                  disabled={loadingToggleProduct === product.id}
                                 >
-                                  {isInactive ? <Eye size={12} /> : <EyeOff size={12} />}
+                                  {loadingToggleProduct === product.id ? '...' : (isInactive ? <Eye size={12} /> : <EyeOff size={12} />)}
                                 </Button>
                                 
                                 {/* Delete button */}
@@ -617,8 +822,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                                   onClick={() => deleteProduct(product.id)}
                                   className="h-8 w-8 p-0"
                                   title="Excluir produto"
+                                  disabled={loadingDeleteProduct === product.id}
                                 >
-                                  <X size={12} />
+                                  {loadingDeleteProduct === product.id ? '...' : <X size={12} />}
                                 </Button>
                               </div>
                             </TableCell>
@@ -650,7 +856,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                 </Button>
               </div>
 
-              <div className="grid lg:grid-cols-2 gap-6">
+              <div className="grid gap-6 lg:grid-cols-2">
                 {/* Basic Info */}
                 <div className="space-y-4">
                   <div>
@@ -751,7 +957,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                         )}
                       </div>
 
-                      <div className="grid md:grid-cols-3 gap-4">
+                      <div className="grid gap-4 md:grid-cols-3">
                         <div>
                           <label className="block text-sm font-medium mb-1">Valor</label>
                           <Input
@@ -863,8 +1069,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-6 border-t">
-                <Button onClick={saveProduct} className="flex-1">
-                  {editingProduct === 'new' ? 'Cadastrar Produto' : 'Salvar Alterações'}
+                <Button onClick={saveProduct} className="flex-1" disabled={loadingProduct}>
+                  {loadingProduct ? 'Salvando...' : (editingProduct === 'new' ? 'Cadastrar Produto' : 'Salvar Alterações')}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -903,7 +1109,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   <p>Nenhum banner cadastrado ainda.</p>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {banners.map((banner) => (
                     <div key={banner.id} className="border rounded-lg overflow-hidden">
                       <div className="aspect-video bg-gray-100 relative">
@@ -931,8 +1137,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                             variant="outline"
                             size="sm"
                             onClick={() => toggleBannerStatus(banner.id)}
+                            disabled={loadingToggleBanner === banner.id}
                           >
-                            {banner.active ? 'Desativar' : 'Ativar'}
+                            {loadingToggleBanner === banner.id ? '...' : (banner.active ? 'Desativar' : 'Ativar')}
                           </Button>
                           <Button
                             variant="outline"
@@ -952,8 +1159,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                             variant="destructive"
                             size="sm"
                             onClick={() => deleteBanner(banner.id)}
+                            disabled={loadingDeleteBanner === banner.id}
                           >
-                            <Trash2 size={14} />
+                            {loadingDeleteBanner === banner.id ? '...' : <Trash2 size={14} />}
                           </Button>
                         </div>
                       </div>
@@ -964,12 +1172,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
               {/* Banner Form */}
               {editingBanner && (
-                <div className="p-6 bg-gray-50 rounded-lg space-y-4">
+                <div className="p-4 sm:p-6 bg-gray-50 rounded-lg space-y-4">
                   <h4 className="font-medium">
                     {editingBanner === 'new' ? 'Novo Banner' : 'Editar Banner'}
                   </h4>
 
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium mb-2">Nome do Banner *</label>
                       <Input
@@ -1021,8 +1229,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   <div className="flex gap-3">
-                    <Button onClick={saveBanner}>
-                      {editingBanner === 'new' ? 'Criar Banner' : 'Salvar Alterações'}
+                    <Button onClick={saveBanner} disabled={loadingBanner}>
+                      {loadingBanner ? 'Salvando...' : (editingBanner === 'new' ? 'Criar Banner' : 'Salvar Alterações')}
                     </Button>
                     <Button variant="outline" onClick={resetBannerForm}>
                       Cancelar
